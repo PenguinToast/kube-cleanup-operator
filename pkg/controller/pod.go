@@ -24,7 +24,11 @@ func podRelatedToCronJob(pod *corev1.Pod, jobStore cache.Store) bool {
 	return false
 }
 
-func shouldDeletePod(pod *corev1.Pod, orphaned, pending, evicted, successful, failed time.Duration) bool {
+func shouldDeletePod(pod *corev1.Pod, orphaned, pending, evicted, successful, failed time.Duration, skipPods bool) bool {
+	if skipPods {
+		return false
+	}
+
 	// evicted pods, those with or without owner references, but in Evicted state
 	//  - uses c.deleteEvictedAfter, this one is tricky, because there is no timestamp of eviction.
 	// So, basically it will be removed as soon as discovered

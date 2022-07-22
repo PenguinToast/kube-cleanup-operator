@@ -50,6 +50,7 @@ func main() {
 	deleteOrphanedAfter := flag.Duration("delete-orphaned-pods-after", 1*time.Hour, "Delete orphaned pods. Pods without an owner in non-running state (golang duration format, e.g 5m), 0 - never delete")
 	deleteEvictedAfter := flag.Duration("delete-evicted-pods-after", 15*time.Minute, "Delete pods in evicted state (golang duration format, e.g 5m), 0 - never delete")
 	deletePendingAfter := flag.Duration("delete-pending-pods-after", 0, "Delete pods in pending state after X duration (golang duration format, e.g 5m), 0 - never delete")
+	skipPods := flag.Bool("skip-pods", false, "Do not clean up pods, only jobs")
 	ignoreOwnedByCronjob := flag.Bool("ignore-owned-by-cronjobs", false, "[EXPERIMENTAL] Do not cleanup pods and jobs created by cronjobs")
 
 	legacyKeepSuccessHours := flag.Int64("keep-successful", 0, "Number of hours to keep successful jobs, -1 - forever, 0 - never (default), >0 number of hours")
@@ -58,9 +59,9 @@ func main() {
 	legacyMode := flag.Bool("legacy-mode", true, "Legacy mode: `true` - use old `keep-*` flags, `false` - enable new `delete-*-after` flags")
 
 	dryRun := flag.Bool("dry-run", false, "Print only, do not delete anything.")
-	
+
 	labelSelector := flag.String("label-selector", "", "Delete only jobs and pods that meet label selector requirements")
-	
+
 	flag.Parse()
 	setupLogging()
 
@@ -74,13 +75,14 @@ func main() {
 	optsInfo.WriteString(fmt.Sprintf("\tdelete-pending-after: %s\n", *deletePendingAfter))
 	optsInfo.WriteString(fmt.Sprintf("\tdelete-orphaned-after: %s\n", *deleteOrphanedAfter))
 	optsInfo.WriteString(fmt.Sprintf("\tdelete-evicted-after: %s\n", *deleteEvictedAfter))
+	optsInfo.WriteString(fmt.Sprintf("\tskip-pods: %v\n", *skipPods))
 	optsInfo.WriteString(fmt.Sprintf("\tignore-owned-by-cronjobs: %v\n", *ignoreOwnedByCronjob))
 
 	optsInfo.WriteString(fmt.Sprintf("\n\tlegacy-mode: %v\n", *legacyMode))
 	optsInfo.WriteString(fmt.Sprintf("\tkeep-successful: %d\n", *legacyKeepSuccessHours))
 	optsInfo.WriteString(fmt.Sprintf("\tkeep-failures: %d\n", *legacyKeepFailedHours))
 	optsInfo.WriteString(fmt.Sprintf("\tkeep-pending: %d\n", *legacyKeepPendingHours))
-	
+
 	optsInfo.WriteString(fmt.Sprintf("\tlabel-selector: %s\n", *labelSelector))
 	log.Println(optsInfo.String())
 
@@ -133,6 +135,7 @@ func main() {
 				*deletePendingAfter,
 				*deleteOrphanedAfter,
 				*deleteEvictedAfter,
+				*skipPods,
 				*ignoreOwnedByCronjob,
 				*labelSelector,
 				stopCh,

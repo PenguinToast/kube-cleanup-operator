@@ -50,9 +50,10 @@ type Kleaner struct {
 	deleteOrphanedAfter   time.Duration
 	deleteEvictedAfter    time.Duration
 
+	skipPods             bool
 	ignoreOwnedByCronjob bool
-	
-	labelSelector        string
+
+	labelSelector string
 
 	dryRun bool
 	ctx    context.Context
@@ -61,7 +62,7 @@ type Kleaner struct {
 
 // NewKleaner creates a new NewKleaner
 func NewKleaner(ctx context.Context, kclient *kubernetes.Clientset, namespace string, dryRun bool, deleteSuccessfulAfter,
-	deleteFailedAfter, deletePendingAfter, deleteOrphanedAfter, deleteEvictedAfter time.Duration, ignoreOwnedByCronjob bool,
+	deleteFailedAfter, deletePendingAfter, deleteOrphanedAfter, deleteEvictedAfter time.Duration, skipPods bool, ignoreOwnedByCronjob bool,
 	labelSelector string,
 	stopCh <-chan struct{}) *Kleaner {
 	jobInformer := cache.NewSharedIndexInformer(
@@ -105,6 +106,7 @@ func NewKleaner(ctx context.Context, kclient *kubernetes.Clientset, namespace st
 		deletePendingAfter:    deletePendingAfter,
 		deleteOrphanedAfter:   deleteOrphanedAfter,
 		deleteEvictedAfter:    deleteEvictedAfter,
+		skipPods:              skipPods,
 		ignoreOwnedByCronjob:  ignoreOwnedByCronjob,
 		labelSelector:         labelSelector,
 	}
@@ -180,7 +182,7 @@ func (c *Kleaner) Process(obj interface{}) {
 			return
 		}
 		// normal cleanup flow
-		if shouldDeletePod(t, c.deleteOrphanedAfter, c.deletePendingAfter, c.deleteEvictedAfter, c.deleteSuccessfulAfter, c.deleteFailedAfter) {
+		if shouldDeletePod(t, c.deleteOrphanedAfter, c.deletePendingAfter, c.deleteEvictedAfter, c.deleteSuccessfulAfter, c.deleteFailedAfter, c.skipPods) {
 			c.DeletePod(t)
 		}
 	}

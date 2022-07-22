@@ -1,6 +1,6 @@
 NAME := kube-cleanup-operator
 AUTHOR=lwolf
-VERSION ?= 0.6.0
+VERSION ?= 0.8.3
 REGISTRY ?= quay.io
 GIT_SHA=$(shell git rev-list --count HEAD)-$(shell git rev-parse --short=7 HEAD)
 COMMIT_TIME=$(shell git show --format=%ct --no-patch)
@@ -29,7 +29,7 @@ build: golang
 test:
 	go test -race ./pkg/... -coverprofile=coverage.txt -covermode=atomic
 
-static: golang 
+static: golang
 	@echo "--> Compiling the static binary"
 	@mkdir -p bin
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -a -tags netgo -ldflags "-w ${LFLAGS}" -o bin/${NAME} ./cmd
